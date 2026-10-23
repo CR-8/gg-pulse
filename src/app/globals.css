@@ -1,0 +1,156 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design tokens (docs/UI-DESIGN-SYSTEM.md). Components use only these semantic names,
+ * never raw colors. Restrained orange is reserved for the primary action and brand marks.
+ */
+:root {
+  --radius: 0.5rem;
+
+  --background: #ffffff;
+  --foreground: #1f1f1f;
+  --card: #ffffff;
+  --card-foreground: #1f1f1f;
+  --popover: #ffffff;
+  --popover-foreground: #1f1f1f;
+  --primary: #ff6b3d;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #1f1f1f;
+  --muted: #f7f7f8;
+  --muted-foreground: #6b6b70;
+  --accent: #f1f1f2;
+  --accent-foreground: #1f1f1f;
+  --destructive: #d92d20;
+  --border: #e6e6e8;
+  --input: #d9d9de;
+  --ring: #4f8ff7;
+
+  --brand-soft: #fff1eb;
+  --success: #12805c;
+  --success-soft: #e7f6ef;
+  --warning: #b54708;
+  --warning-soft: #fef4e6;
+  --info: #175cd3;
+  --info-soft: #eaf2ff;
+  --danger-soft: #fdeceb;
+
+  --chart-1: #ff6b3d;
+  --chart-2: #175cd3;
+  --chart-3: #12805c;
+  --chart-4: #b54708;
+  --chart-5: #7a5af8;
+
+  --sidebar: #fafafa;
+  --sidebar-foreground: #1f1f1f;
+  --sidebar-primary: #ff6b3d;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #efeff1;
+  --sidebar-accent-foreground: #1f1f1f;
+  --sidebar-border: #e6e6e8;
+  --sidebar-ring: #4f8ff7;
+}
+
+.dark {
+  --background: #18181a;
+  --foreground: #ededef;
+  --card: #1f1f22;
+  --card-foreground: #ededef;
+  --popover: #222225;
+  --popover-foreground: #ededef;
+  --primary: #ff7a50;
+  --primary-foreground: #1a0a03;
+  --secondary: #2a2a2e;
+  --secondary-foreground: #ededef;
+  --muted: #232326;
+  --muted-foreground: #a1a1a8;
+  --accent: #2c2c30;
+  --accent-foreground: #ededef;
+  --destructive: #f97066;
+  --border: #303034;
+  --input: #3a3a3f;
+  --ring: #6ea2ff;
+
+  --brand-soft: #3a2118;
+  --success: #47cd89;
+  --success-soft: #133024;
+  --warning: #fdb022;
+  --warning-soft: #3a2a10;
+  --info: #84adff;
+  --info-soft: #172846;
+  --danger-soft: #3d1a17;
+
+  --sidebar: #1c1c1f;
+  --sidebar-foreground: #ededef;
+  --sidebar-primary: #ff7a50;
+  --sidebar-primary-foreground: #1a0a03;
+  --sidebar-accent: #2a2a2e;
+  --sidebar-accent-foreground: #ededef;
+  --sidebar-border: #2c2c30;
+  --sidebar-ring: #6ea2ff;
+}
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-brand-soft: var(--brand-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-danger-soft: var(--danger-soft);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}

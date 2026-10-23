@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# env — never commit real secrets
+.env
+.env.*
+!.env.example
+
+# leftovers from the legacy gg-docs checkout that lived in this folder
+.venv/
+data/
+.claude/worktrees/
+.claude/settings.local.json
+
+# os / editor
+.DS_Store
+Thumbs.db
+*.log
+coverage/
