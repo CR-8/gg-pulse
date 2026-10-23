@@ -11,9 +11,12 @@ export const toDateInput = (value: Date | string | null | undefined) =>
 
 export function formatDate(value: string | Date | null | undefined): string {
   if (!value) return "";
-  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }).format(
-    new Date(value),
-  );
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(value));
 }
 
 export function formatDateTime(value: string | Date): string {

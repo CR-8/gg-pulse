@@ -11,7 +11,13 @@ import { issueVerificationCode } from "@/modules/auth/verification";
 let dummyHash: Promise<string> | undefined;
 const getDummyHash = () => (dummyHash ??= bcrypt.hash("no-account-has-this-password", 10));
 
-export type CredentialUser = { id: string; name: string; email: string; image?: string; authVersion: number };
+export type CredentialUser = {
+  id: string;
+  name: string;
+  email: string;
+  image?: string;
+  authVersion: number;
+};
 
 export async function verifyCredentials(raw: unknown): Promise<CredentialUser | null> {
   const parsed = signInSchema.safeParse(raw);
@@ -20,7 +26,9 @@ export async function verifyCredentials(raw: unknown): Promise<CredentialUser | 
   if (!(await hit(`signin:${email}`, 10, 15 * 60))) return null;
 
   await connectDB();
-  const user = await User.findOne({ email }).select("name email image passwordHash isActive authVersion").lean();
+  const user = await User.findOne({ email })
+    .select("name email image passwordHash isActive authVersion")
+    .lean();
   const valid = await bcrypt.compare(password, user?.passwordHash ?? (await getDummyHash()));
   if (!user || !user.passwordHash || !valid || !user.isActive) return null;
   return {
@@ -38,7 +46,10 @@ export async function signUp(input: unknown): Promise<{ userId: string }> {
   await enforceRateLimit(`signup:${email}`, 5, 60 * 60);
   await connectDB();
   if (await User.exists({ email })) {
-    throw new ServiceError("CONFLICT", "An account with this email already exists. Sign in instead.");
+    throw new ServiceError(
+      "CONFLICT",
+      "An account with this email already exists. Sign in instead.",
+    );
   }
   const user = await User.create({
     // Placeholder until onboarding asks for the real name.
@@ -70,10 +81,14 @@ type OAuthProfile = { email: string; name?: string | null; image?: string | null
  * Finds or creates the account for a verified OAuth email (GG-ops links Google the same way).
  * Returns null for deactivated accounts so sign-in is refused.
  */
-export async function upsertOAuthUser(profile: OAuthProfile): Promise<{ id: string; authVersion: number } | null> {
+export async function upsertOAuthUser(
+  profile: OAuthProfile,
+): Promise<{ id: string; authVersion: number } | null> {
   await connectDB();
   const email = profile.email.toLowerCase();
-  const existing = await User.findOne({ email }).select("_id authVersion isActive emailVerifiedAt").lean();
+  const existing = await User.findOne({ email })
+    .select("_id authVersion isActive emailVerifiedAt")
+    .lean();
   if (existing) {
     if (!existing.isActive) return null;
     if (existing.emailVerifiedAt === null) {
@@ -100,7 +115,9 @@ export async function upsertOAuthUser(profile: OAuthProfile): Promise<{ id: stri
   return { id: String(created._id), authVersion: 0 };
 }
 
-export async function sessionClaimsFor(email: string): Promise<{ id: string; authVersion: number } | null> {
+export async function sessionClaimsFor(
+  email: string,
+): Promise<{ id: string; authVersion: number } | null> {
   await connectDB();
   const user = await User.findOne({ email: email.toLowerCase(), isActive: true })
     .select("_id authVersion")

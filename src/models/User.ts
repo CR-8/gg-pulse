@@ -27,4 +27,5 @@ const userSchema = new Schema(
 
 export type UserDoc = InferSchemaType<typeof userSchema>;
 
-export const User: Model<UserDoc> = (models.User as Model<UserDoc>) || model<UserDoc>("User", userSchema);
+export const User: Model<UserDoc> =
+  (models.User as Model<UserDoc>) || model<UserDoc>("User", userSchema);

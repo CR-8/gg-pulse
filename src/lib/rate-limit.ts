@@ -23,6 +23,9 @@ export async function hit(key: string, limit: number, windowSeconds: number): Pr
 
 export async function enforceRateLimit(key: string, limit: number, windowSeconds: number) {
   if (!(await hit(key, limit, windowSeconds))) {
-    throw new ServiceError("RATE_LIMITED", "Too many attempts. Please wait a few minutes and try again.");
+    throw new ServiceError(
+      "RATE_LIMITED",
+      "Too many attempts. Please wait a few minutes and try again.",
+    );
   }
 }

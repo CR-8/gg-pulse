@@ -12,7 +12,10 @@ export type ProjectContext = {
 };
 
 /** Ownership chain: the project must belong to the scope's workspace and not be archived. */
-export async function loadProject(scope: WorkspaceScope, projectId: unknown): Promise<ProjectContext> {
+export async function loadProject(
+  scope: WorkspaceScope,
+  projectId: unknown,
+): Promise<ProjectContext> {
   const id = toObjectId(projectId);
   if (!id) throw notFoundError("Project");
   await connectDB();

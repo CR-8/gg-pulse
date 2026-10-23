@@ -1,11 +1,32 @@
 /** Decorative line art for auth and onboarding: a task board with a delivery pulse. Original artwork. */
 export function BoardIllustration({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 520 400" className={className} role="img" aria-label="" aria-hidden fill="none">
-      <g className="text-foreground/70" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 520 400"
+      className={className}
+      role="img"
+      aria-label=""
+      aria-hidden
+      fill="none"
+    >
+      <g
+        className="text-foreground/70"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         {/* clouds */}
-        <path d="M402 62c-2-16 12-28 26-24 6-14 30-14 36 2 14-2 24 10 20 22H402z" fill="#FCD34D" stroke="none" />
-        <path d="M22 262c-2-12 10-22 21-18 5-11 24-11 29 2 11-2 19 8 16 18H22z" fill="#FCD34D" stroke="none" />
+        <path
+          d="M402 62c-2-16 12-28 26-24 6-14 30-14 36 2 14-2 24 10 20 22H402z"
+          fill="#FCD34D"
+          stroke="none"
+        />
+        <path
+          d="M22 262c-2-12 10-22 21-18 5-11 24-11 29 2 11-2 19 8 16 18H22z"
+          fill="#FCD34D"
+          stroke="none"
+        />
         {/* sparkles */}
         <path d="M150 48v18M141 57h18" />
         <path d="M330 34v12M324 40h12" />

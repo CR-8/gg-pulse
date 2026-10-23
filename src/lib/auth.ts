@@ -23,7 +23,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!account || account.provider === "credentials") return true;
       if (!user.email) return false;
       if (account.provider === "github") {
-        if (!account.access_token || !(await isVerifiedGitHubEmail(account.access_token, user.email))) {
+        if (
+          !account.access_token ||
+          !(await isVerifiedGitHubEmail(account.access_token, user.email))
+        ) {
           return "/sign-in?error=UnverifiedEmail";
         }
       }

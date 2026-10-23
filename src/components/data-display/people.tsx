@@ -8,7 +8,9 @@ export function UserAvatar({ person, className }: { person: Person; className?: 
   return (
     <Avatar className={cn("size-6 text-[10px]", className)}>
       {person.image && <AvatarImage src={person.image} alt="" />}
-      <AvatarFallback className="bg-brand-soft text-primary font-semibold">{initials(person.name)}</AvatarFallback>
+      <AvatarFallback className="bg-brand-soft text-primary font-semibold">
+        {initials(person.name)}
+      </AvatarFallback>
     </Avatar>
   );
 }

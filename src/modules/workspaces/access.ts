@@ -21,9 +21,14 @@ export type WorkspaceScope = {
   actor: Actor;
 };
 
-export async function resolveWorkspaceScope(actor: Actor, slug: string): Promise<WorkspaceScope | null> {
+export async function resolveWorkspaceScope(
+  actor: Actor,
+  slug: string,
+): Promise<WorkspaceScope | null> {
   await connectDB();
-  const workspace = await Workspace.findOne({ slug: slug.toLowerCase() }).select("name slug").lean();
+  const workspace = await Workspace.findOne({ slug: slug.toLowerCase() })
+    .select("name slug")
+    .lean();
   if (!workspace) return null;
   const membership = await WorkspaceMember.findOne({
     workspaceId: workspace._id,
@@ -56,10 +61,18 @@ export async function actionScope(slug: string): Promise<WorkspaceScope> {
   return scope;
 }
 
-export function assertCan(scope: WorkspaceScope, capability: Capability, projectRole?: ProjectRole | null) {
+export function assertCan(
+  scope: WorkspaceScope,
+  capability: Capability,
+  projectRole?: ProjectRole | null,
+) {
   if (!can(capability, { workspaceRole: scope.role, projectRole })) throw forbiddenError();
 }
 
-export function allows(scope: WorkspaceScope, capability: Capability, projectRole?: ProjectRole | null) {
+export function allows(
+  scope: WorkspaceScope,
+  capability: Capability,
+  projectRole?: ProjectRole | null,
+) {
   return can(capability, { workspaceRole: scope.role, projectRole });
 }

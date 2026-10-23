@@ -3,7 +3,11 @@ import { dateInput } from "@/lib/dates";
 import { MILESTONE_STATUSES } from "@/modules/milestones/constants";
 
 const fields = {
-  name: z.string().trim().min(2, "Use at least 2 characters.").max(80, "Use at most 80 characters."),
+  name: z
+    .string()
+    .trim()
+    .min(2, "Use at least 2 characters.")
+    .max(80, "Use at most 80 characters."),
   description: z.string().trim().max(2000),
   startDate: dateInput,
   dueDate: dateInput,

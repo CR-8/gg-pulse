@@ -14,4 +14,5 @@ export const logger = {
   error: (message: string, context?: Record<string, unknown>) => emit("error", message, context),
 };
 
-export const errorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error));
+export const errorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : String(error);

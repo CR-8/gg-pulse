@@ -1,13 +1,25 @@
 import type { MilestoneStatus } from "@/modules/milestones/constants";
 import type { TaskStatus } from "@/modules/tasks/constants";
 
-export type MilestoneProgress = { total: number; done: number; blocked: number; open: number; percent: number };
+export type MilestoneProgress = {
+  total: number;
+  done: number;
+  blocked: number;
+  open: number;
+  percent: number;
+};
 
 export function summarizeTasks(tasks: { status: TaskStatus }[]): MilestoneProgress {
   const done = tasks.filter((t) => t.status === "DONE").length;
   const blocked = tasks.filter((t) => t.status === "BLOCKED").length;
   const total = tasks.length;
-  return { total, done, blocked, open: total - done, percent: total ? Math.round((done / total) * 100) : 0 };
+  return {
+    total,
+    done,
+    blocked,
+    open: total - done,
+    percent: total ? Math.round((done / total) * 100) : 0,
+  };
 }
 
 export type SignalLevel = "CLOSED" | "EMPTY" | "OVERDUE" | "AT_RISK" | "ON_TRACK" | "NO_DATE";
@@ -50,11 +62,21 @@ export function milestoneSignal(
     };
   }
   if (blockedNote) return { level: "AT_RISK", reason: `${blockedNote}.` };
-  if (progress.open > 0 && daysLeft <= AT_RISK_WINDOW_DAYS && progress.percent < AT_RISK_MIN_PERCENT) {
-    return { level: "AT_RISK", reason: `${daysLeft} day${daysLeft === 1 ? "" : "s"} left and ${progress.percent}% of tasks done.` };
+  if (
+    progress.open > 0 &&
+    daysLeft <= AT_RISK_WINDOW_DAYS &&
+    progress.percent < AT_RISK_MIN_PERCENT
+  ) {
+    return {
+      level: "AT_RISK",
+      reason: `${daysLeft} day${daysLeft === 1 ? "" : "s"} left and ${progress.percent}% of tasks done.`,
+    };
   }
   return {
     level: "ON_TRACK",
-    reason: progress.open === 0 ? "All tasks done." : `${progress.percent}% of tasks done, due in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`,
+    reason:
+      progress.open === 0
+        ? "All tasks done."
+        : `${progress.percent}% of tasks done, due in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`,
   };
 }

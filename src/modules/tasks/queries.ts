@@ -29,7 +29,15 @@ export type TaskDTO = {
 
 type TaskRow = Pick<
   TaskDoc,
-  "projectId" | "title" | "description" | "status" | "priority" | "assigneeIds" | "dueDate" | "estimateHours" | "milestoneId"
+  | "projectId"
+  | "title"
+  | "description"
+  | "status"
+  | "priority"
+  | "assigneeIds"
+  | "dueDate"
+  | "estimateHours"
+  | "milestoneId"
 > & { _id: unknown; updatedAt?: Date };
 
 export function toTaskDTO(t: TaskRow): TaskDTO {
@@ -51,12 +59,20 @@ export function toTaskDTO(t: TaskRow): TaskDTO {
   };
 }
 
-const TASK_FIELDS = "projectId title description status priority assigneeIds dueDate estimateHours milestoneId updatedAt";
+const TASK_FIELDS =
+  "projectId title description status priority assigneeIds dueDate estimateHours milestoneId updatedAt";
 
 /** Caller must have loaded the project through `loadProject` (ownership chain). */
-export async function listProjectTasks(scope: WorkspaceScope, projectId: string): Promise<TaskDTO[]> {
+export async function listProjectTasks(
+  scope: WorkspaceScope,
+  projectId: string,
+): Promise<TaskDTO[]> {
   await connectDB();
-  const tasks = await Task.find({ workspaceId: oid(scope.workspace.id), projectId: oid(projectId), isArchived: false })
+  const tasks = await Task.find({
+    workspaceId: oid(scope.workspace.id),
+    projectId: oid(projectId),
+    isArchived: false,
+  })
     .select(TASK_FIELDS)
     .sort({ position: 1, createdAt: 1 })
     .lean();
@@ -66,7 +82,10 @@ export async function listProjectTasks(scope: WorkspaceScope, projectId: string)
 export type MyTaskDTO = TaskDTO & { projectName: string };
 
 /** Open tasks assigned to the actor, soonest due first, undated last. */
-export async function listMyTasks(scope: WorkspaceScope, includeDone = false): Promise<MyTaskDTO[]> {
+export async function listMyTasks(
+  scope: WorkspaceScope,
+  includeDone = false,
+): Promise<MyTaskDTO[]> {
   await connectDB();
   const workspaceId = oid(scope.workspace.id);
   const projects = await Project.find({ workspaceId, archivedAt: null }).select("name").lean();
@@ -84,7 +103,10 @@ export async function listMyTasks(scope: WorkspaceScope, includeDone = false): P
     .lean();
   const dated = tasks.filter((t) => t.dueDate);
   const undated = tasks.filter((t) => !t.dueDate);
-  return [...dated, ...undated].map((t) => ({ ...toTaskDTO(t), projectName: nameOf.get(String(t.projectId)) ?? "" }));
+  return [...dated, ...undated].map((t) => ({
+    ...toTaskDTO(t),
+    projectName: nameOf.get(String(t.projectId)) ?? "",
+  }));
 }
 
 export type CommentDTO = { id: string; authorId: string; body: string; createdAt: string };
@@ -103,25 +125,41 @@ export type TaskDetailDTO = {
   people: Record<string, string>;
 };
 
-export async function getTaskDetail(scope: WorkspaceScope, projectId: string, taskId: string): Promise<TaskDetailDTO> {
+export async function getTaskDetail(
+  scope: WorkspaceScope,
+  projectId: string,
+  taskId: string,
+): Promise<TaskDetailDTO> {
   const id = toObjectId(taskId);
   if (!id) throw notFoundError("Task");
   await connectDB();
   const workspaceId = oid(scope.workspace.id);
-  const task = await Task.findOne({ _id: id, workspaceId, projectId: oid(projectId), isArchived: false }).lean();
+  const task = await Task.findOne({
+    _id: id,
+    workspaceId,
+    projectId: oid(projectId),
+    isArchived: false,
+  }).lean();
   if (!task) throw notFoundError("Task");
 
   const [comments, activity, milestone] = await Promise.all([
-    Comment.find({ workspaceId, taskId: id, deletedAt: null }).sort({ createdAt: 1 }).limit(500).lean(),
+    Comment.find({ workspaceId, taskId: id, deletedAt: null })
+      .sort({ createdAt: 1 })
+      .limit(500)
+      .lean(),
     ActivityLog.find({ workspaceId, taskId: id }).sort({ createdAt: -1 }).limit(100).lean(),
-    task.milestoneId ? Milestone.findOne({ _id: task.milestoneId, workspaceId }).select("name").lean() : null,
+    task.milestoneId
+      ? Milestone.findOne({ _id: task.milestoneId, workspaceId }).select("name").lean()
+      : null,
   ]);
 
   // Authors may have left the workspace; their names still resolve for history.
   const personIds = new Set<string>([String(task.createdBy)]);
   comments.forEach((c) => personIds.add(String(c.authorId)));
   activity.forEach((a) => a.actorId && personIds.add(String(a.actorId)));
-  const users = await User.find({ _id: { $in: [...personIds].map(oid) } }).select("name").lean();
+  const users = await User.find({ _id: { $in: [...personIds].map(oid) } })
+    .select("name")
+    .lean();
 
   return {
     task: {
@@ -141,7 +179,7 @@ export async function getTaskDetail(scope: WorkspaceScope, projectId: string, ta
       id: String(a._id),
       actorId: a.actorId ? String(a.actorId) : null,
       action: a.action,
-      changes: ((a.metadata as { changes?: ActivityDTO["changes"] } | undefined)?.changes ?? {}),
+      changes: (a.metadata as { changes?: ActivityDTO["changes"] } | undefined)?.changes ?? {},
       createdAt: a.createdAt.toISOString(),
     })),
     people: Object.fromEntries(users.map((u) => [String(u._id), u.name])),
@@ -173,7 +211,14 @@ export async function getWorkspaceOverview(scope: WorkspaceScope): Promise<Works
     Task.countDocuments({ ...open, assigneeIds: oid(scope.actor.id) }),
     Task.countDocuments({ ...open, dueDate: { $gte: today, $lt: weekEnd } }),
   ]);
-  return { activeProjects: projects.length, openTasks, overdueTasks, blockedTasks, myOpenTasks, dueThisWeek };
+  return {
+    activeProjects: projects.length,
+    openTasks,
+    overdueTasks,
+    blockedTasks,
+    myOpenTasks,
+    dueThisWeek,
+  };
 }
 
 export type RecentActivityDTO = ActivityDTO & {
@@ -184,7 +229,10 @@ export type RecentActivityDTO = ActivityDTO & {
   taskTitle: string | null;
 };
 
-export async function listRecentActivity(scope: WorkspaceScope, limit = 12): Promise<RecentActivityDTO[]> {
+export async function listRecentActivity(
+  scope: WorkspaceScope,
+  limit = 12,
+): Promise<RecentActivityDTO[]> {
   await connectDB();
   const workspaceId = oid(scope.workspace.id);
   const rows = await ActivityLog.find({ workspaceId, entityType: { $in: ["TASK", "PROJECT"] } })
@@ -192,11 +240,24 @@ export async function listRecentActivity(scope: WorkspaceScope, limit = 12): Pro
     .limit(limit)
     .lean();
   const ids = (key: "actorId" | "projectId" | "taskId") =>
-    [...new Set(rows.map((r) => r[key]).filter(Boolean).map(String))].map(oid);
+    [
+      ...new Set(
+        rows
+          .map((r) => r[key])
+          .filter(Boolean)
+          .map(String),
+      ),
+    ].map(oid);
   const [users, projects, tasks] = await Promise.all([
-    User.find({ _id: { $in: ids("actorId") } }).select("name").lean(),
-    Project.find({ _id: { $in: ids("projectId") }, workspaceId }).select("name").lean(),
-    Task.find({ _id: { $in: ids("taskId") }, workspaceId }).select("title").lean(),
+    User.find({ _id: { $in: ids("actorId") } })
+      .select("name")
+      .lean(),
+    Project.find({ _id: { $in: ids("projectId") }, workspaceId })
+      .select("name")
+      .lean(),
+    Task.find({ _id: { $in: ids("taskId") }, workspaceId })
+      .select("title")
+      .lean(),
   ]);
   const userName = new Map(users.map((u) => [String(u._id), u.name]));
   const projectName = new Map(projects.map((p) => [String(p._id), p.name]));
@@ -206,7 +267,7 @@ export async function listRecentActivity(scope: WorkspaceScope, limit = 12): Pro
     actorId: a.actorId ? String(a.actorId) : null,
     actorName: (a.actorId && userName.get(String(a.actorId))) || "Someone",
     action: a.action,
-    changes: ((a.metadata as { changes?: ActivityDTO["changes"] } | undefined)?.changes ?? {}),
+    changes: (a.metadata as { changes?: ActivityDTO["changes"] } | undefined)?.changes ?? {},
     createdAt: a.createdAt.toISOString(),
     projectId: a.projectId ? String(a.projectId) : null,
     projectName: (a.projectId && projectName.get(String(a.projectId))) || null,

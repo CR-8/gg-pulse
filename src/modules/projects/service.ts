@@ -7,12 +7,19 @@ import { WorkspaceMember } from "@/models/WorkspaceMember";
 import { logActivity } from "@/modules/activities/log";
 import { recordAudit } from "@/modules/audit/record";
 import { loadProject } from "@/modules/projects/access";
-import { createProjectSchema, projectRoleSchema, updateProjectSchema } from "@/modules/projects/schemas";
+import {
+  createProjectSchema,
+  projectRoleSchema,
+  updateProjectSchema,
+} from "@/modules/projects/schemas";
 import { assertCan, type WorkspaceScope } from "@/modules/workspaces/access";
 
 // Not a "use server" module: every function takes an authorized WorkspaceScope.
 
-export async function createProject(scope: WorkspaceScope, input: unknown): Promise<{ id: string }> {
+export async function createProject(
+  scope: WorkspaceScope,
+  input: unknown,
+): Promise<{ id: string }> {
   assertCan(scope, "project.create");
   const { name, description } = createProjectSchema.parse(input);
   await connectDB();
@@ -40,7 +47,11 @@ export async function createProject(scope: WorkspaceScope, input: unknown): Prom
   return { id };
 }
 
-export async function updateProject(scope: WorkspaceScope, projectId: string, input: unknown): Promise<void> {
+export async function updateProject(
+  scope: WorkspaceScope,
+  projectId: string,
+  input: unknown,
+): Promise<void> {
   const { project, projectRole } = await loadProject(scope, projectId);
   assertCan(scope, "project.manage", projectRole);
   const patch = updateProjectSchema.parse(input);
@@ -53,7 +64,10 @@ export async function updateProject(scope: WorkspaceScope, projectId: string, in
     set.statusUpdatedAt = new Date();
   }
   if (!Object.keys(set).length) return;
-  await Project.updateOne({ _id: oid(project.id), workspaceId: oid(scope.workspace.id) }, { $set: set });
+  await Project.updateOne(
+    { _id: oid(project.id), workspaceId: oid(scope.workspace.id) },
+    { $set: set },
+  );
   await logActivity({
     workspaceId: scope.workspace.id,
     projectId: project.id,
@@ -81,24 +95,39 @@ export async function archiveProject(scope: WorkspaceScope, projectId: string): 
 }
 
 /** Grants or clears a project role. The user must be an active member of the same workspace. */
-export async function setProjectRole(scope: WorkspaceScope, projectId: string, input: unknown): Promise<void> {
+export async function setProjectRole(
+  scope: WorkspaceScope,
+  projectId: string,
+  input: unknown,
+): Promise<void> {
   const { project, projectRole } = await loadProject(scope, projectId);
   assertCan(scope, "project.manage", projectRole);
   const { userId, role } = projectRoleSchema.parse(input);
   const uid = toObjectId(userId);
   const member = uid
-    ? await WorkspaceMember.exists({ workspaceId: oid(scope.workspace.id), userId: uid, status: "ACTIVE" })
+    ? await WorkspaceMember.exists({
+        workspaceId: oid(scope.workspace.id),
+        userId: uid,
+        status: "ACTIVE",
+      })
     : null;
-  if (!uid || !member) throw new ServiceError("INVALID", "That person is not a member of this workspace.");
+  if (!uid || !member)
+    throw new ServiceError("INVALID", "That person is not a member of this workspace.");
   if (userId === scope.actor.id && role !== "PROJECT_MANAGER") {
-    throw new ServiceError("INVALID", "Ask another manager or an admin to change your own project role.");
+    throw new ServiceError(
+      "INVALID",
+      "Ask another manager or an admin to change your own project role.",
+    );
   }
 
   const key = { projectId: oid(project.id), userId: uid };
   if (role) {
     await ProjectMembership.updateOne(
       key,
-      { $set: { role }, $setOnInsert: { workspaceId: oid(scope.workspace.id), createdBy: oid(scope.actor.id) } },
+      {
+        $set: { role },
+        $setOnInsert: { workspaceId: oid(scope.workspace.id), createdBy: oid(scope.actor.id) },
+      },
       { upsert: true },
     );
   } else {

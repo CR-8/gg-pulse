@@ -38,18 +38,27 @@ async function assertReferences(
       workspaceId: oid(scope.workspace.id),
       projectId: oid(projectId),
     });
-    if (!exists) throw new ServiceError("INVALID", "That milestone belongs to a different project.");
+    if (!exists)
+      throw new ServiceError("INVALID", "That milestone belongs to a different project.");
   }
 }
 
-export async function createTask(scope: WorkspaceScope, projectId: string, input: unknown): Promise<{ id: string }> {
+export async function createTask(
+  scope: WorkspaceScope,
+  projectId: string,
+  input: unknown,
+): Promise<{ id: string }> {
   const { project } = await loadProject(scope, projectId);
   assertCan(scope, "task.create");
   const data = createTaskSchema.parse(input);
   await assertReferences(scope, project.id, data);
 
   // Appended to the end of GG-ops's "No section" group.
-  const last = await Task.findOne({ workspaceId: oid(scope.workspace.id), projectId: oid(project.id), sectionId: null })
+  const last = await Task.findOne({
+    workspaceId: oid(scope.workspace.id),
+    projectId: oid(project.id),
+    sectionId: null,
+  })
     .sort({ position: -1 })
     .select("position")
     .lean();
@@ -84,7 +93,11 @@ async function loadTask(scope: WorkspaceScope, taskId: string) {
   const id = toObjectId(taskId);
   if (!id) throw notFoundError("Task");
   await connectDB();
-  const task = await Task.findOne({ _id: id, workspaceId: oid(scope.workspace.id), isArchived: false }).lean();
+  const task = await Task.findOne({
+    _id: id,
+    workspaceId: oid(scope.workspace.id),
+    isArchived: false,
+  }).lean();
   if (!task) throw notFoundError("Task");
   // Re-checks the chain and that the project is not archived.
   const ctx = await loadProject(scope, String(task.projectId));
@@ -93,7 +106,11 @@ async function loadTask(scope: WorkspaceScope, taskId: string) {
 
 const idList = (ids: Types.ObjectId[] | undefined) => (ids ?? []).map(String).sort();
 
-export async function updateTask(scope: WorkspaceScope, taskId: string, input: unknown): Promise<void> {
+export async function updateTask(
+  scope: WorkspaceScope,
+  taskId: string,
+  input: unknown,
+): Promise<void> {
   const { task, project } = await loadTask(scope, taskId);
   assertCan(scope, "task.update");
   const patch = updateTaskSchema.parse(input);
@@ -121,12 +138,23 @@ export async function updateTask(scope: WorkspaceScope, taskId: string, input: u
     change("assigneeIds", idList(task.assigneeIds), next, next.map(oid));
   }
   if (patch.dueDate !== undefined) {
-    change("dueDate", task.dueDate?.toISOString() ?? null, patch.dueDate?.toISOString() ?? null, patch.dueDate);
+    change(
+      "dueDate",
+      task.dueDate?.toISOString() ?? null,
+      patch.dueDate?.toISOString() ?? null,
+      patch.dueDate,
+    );
   }
-  if (patch.estimateHours !== undefined) change("estimateHours", task.estimateHours ?? null, patch.estimateHours);
+  if (patch.estimateHours !== undefined)
+    change("estimateHours", task.estimateHours ?? null, patch.estimateHours);
   if (patch.milestoneId !== undefined) {
     const from = task.milestoneId ? String(task.milestoneId) : null;
-    change("milestoneId", from, patch.milestoneId, patch.milestoneId ? oid(patch.milestoneId) : null);
+    change(
+      "milestoneId",
+      from,
+      patch.milestoneId,
+      patch.milestoneId ? oid(patch.milestoneId) : null,
+    );
   }
   if (!Object.keys(changes).length) return;
 
@@ -140,11 +168,17 @@ export async function updateTask(scope: WorkspaceScope, taskId: string, input: u
     taskId,
     actorId: scope.actor.id,
     action: changes.status?.to === "DONE" ? "TASK_COMPLETED" : "TASK_UPDATED",
-    metadata: { changes: description ? { ...loggable, description: { from: "…", to: "…" } } : loggable },
+    metadata: {
+      changes: description ? { ...loggable, description: { from: "…", to: "…" } } : loggable,
+    },
   });
 }
 
-export async function addComment(scope: WorkspaceScope, taskId: string, input: unknown): Promise<{ id: string }> {
+export async function addComment(
+  scope: WorkspaceScope,
+  taskId: string,
+  input: unknown,
+): Promise<{ id: string }> {
   const { task, project, projectRole } = await loadTask(scope, taskId);
   assertCan(scope, "comment.create", projectRole);
   const { body } = commentSchema.parse(input);

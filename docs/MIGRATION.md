@@ -9,42 +9,43 @@ accepted.
 Most legacy data is a cache of GitHub and git and is cheaper and more correct to rebuild with a fresh sync than to
 convert. Only data that cannot be re-derived, or is expensive to re-create, is imported.
 
-| Legacy table | Re-derivable? | Decision |
-|---|---|---|
-| `commits` | yes (`git log`, 90-day backfill) | **Rebuild** by the Phase 3 sync |
-| `identities` | yes (GitHub commits API, webhooks) | **Import** (cheap, speeds up attribution), then keep learning |
-| `pushes`, `push_commits` | **no** — the Events API only reaches ~300 events back | **Import** |
-| `pulls` | yes (open + recent closed) | **Rebuild** |
-| `checks` | partly (old check runs expire) | **Import** last 90 days |
-| `breakages` | partly (depends on `checks`) | **Import** |
-| `reviews`, `findings` | no (LLM output, costs money and model versions changed) | **Import** |
-| `sonar_issues` | no (daily snapshots) | **Import** |
-| `docs`, `doc_versions`, `docs_fts` | current docs yes, history no | **Import** `doc_versions` as history; regenerate current docs; FTS rebuilt from target index |
-| `events` | operational log | **Discard** |
-| `settings` | contains plaintext LLM keys and Sonar token | **Do not migrate secrets.** Admins re-enter them in gg-pulse (stored encrypted, `SECURITY.md`). Non-secret values (model, base URL, post-reviews flag, extra repos) are imported into the workspace's integration settings. |
+| Legacy table                       | Re-derivable?                                           | Decision                                                                                                                                                                                                                    |
+| ---------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `commits`                          | yes (`git log`, 90-day backfill)                        | **Rebuild** by the Phase 3 sync                                                                                                                                                                                             |
+| `identities`                       | yes (GitHub commits API, webhooks)                      | **Import** (cheap, speeds up attribution), then keep learning                                                                                                                                                               |
+| `pushes`, `push_commits`           | **no** — the Events API only reaches ~300 events back   | **Import**                                                                                                                                                                                                                  |
+| `pulls`                            | yes (open + recent closed)                              | **Rebuild**                                                                                                                                                                                                                 |
+| `checks`                           | partly (old check runs expire)                          | **Import** last 90 days                                                                                                                                                                                                     |
+| `breakages`                        | partly (depends on `checks`)                            | **Import**                                                                                                                                                                                                                  |
+| `reviews`, `findings`              | no (LLM output, costs money and model versions changed) | **Import**                                                                                                                                                                                                                  |
+| `sonar_issues`                     | no (daily snapshots)                                    | **Import**                                                                                                                                                                                                                  |
+| `docs`, `doc_versions`, `docs_fts` | current docs yes, history no                            | **Import** `doc_versions` as history; regenerate current docs; FTS rebuilt from target index                                                                                                                                |
+| `events`                           | operational log                                         | **Discard**                                                                                                                                                                                                                 |
+| `settings`                         | contains plaintext LLM keys and Sonar token             | **Do not migrate secrets.** Admins re-enter them in gg-pulse (stored encrypted, `SECURITY.md`). Non-secret values (model, base URL, post-reviews flag, extra repos) are imported into the workspace's integration settings. |
 
 Nothing to migrate for people: the legacy app had no user accounts (GitHub logins or two shared passwords). Users
 sign up in gg-pulse, or already exist if gg-pulse shares GG-ops's database.
 
 ## 2. Mapping
 
-| Legacy | Target collection | Natural key used for idempotent upsert |
-|---|---|---|
-| `"owner/name"` repo string | `repositories` | `(workspaceId, providerId)`; `providerId` is GitHub's numeric repo id, resolved once via the API at import |
-| `identities(email, login, name)` | `contributoridentities` | `(workspaceId, email)` |
-| `pushes` + `push_commits` | `pushes` (`commitShas` ≤ 250, as legacy) | `(repositoryId, branch, before, after)` |
-| `checks` | `checkruns` | `(repositoryId, sha, name)` |
-| `breakages` | `breakages` | `(repositoryId, branch, checkName, brokenSha)` |
-| `reviews` | `codereviews` | `(repositoryId, pr, branch, headSha)` |
-| `findings` | `codereviewfindings` (`confidence: "TENTATIVE"` — legacy did not distinguish) | `(reviewId, fingerprint)`, fingerprint = SHA-256 of `path:line:title` |
-| `sonar_issues` | `sonarsnapshots` | `(repositoryId, takenOn, authorEmail, quality)` |
-| `doc_versions` | `documentversions` | `(documentId, headSha, generatedAt)` |
+| Legacy                           | Target collection                                                             | Natural key used for idempotent upsert                                                                     |
+| -------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `"owner/name"` repo string       | `repositories`                                                                | `(workspaceId, providerId)`; `providerId` is GitHub's numeric repo id, resolved once via the API at import |
+| `identities(email, login, name)` | `contributoridentities`                                                       | `(workspaceId, email)`                                                                                     |
+| `pushes` + `push_commits`        | `pushes` (`commitShas` ≤ 250, as legacy)                                      | `(repositoryId, branch, before, after)`                                                                    |
+| `checks`                         | `checkruns`                                                                   | `(repositoryId, sha, name)`                                                                                |
+| `breakages`                      | `breakages`                                                                   | `(repositoryId, branch, checkName, brokenSha)`                                                             |
+| `reviews`                        | `codereviews`                                                                 | `(repositoryId, pr, branch, headSha)`                                                                      |
+| `findings`                       | `codereviewfindings` (`confidence: "TENTATIVE"` — legacy did not distinguish) | `(reviewId, fingerprint)`, fingerprint = SHA-256 of `path:line:title`                                      |
+| `sonar_issues`                   | `sonarsnapshots`                                                              | `(repositoryId, takenOn, authorEmail, quality)`                                                            |
+| `doc_versions`                   | `documentversions`                                                            | `(documentId, headSha, generatedAt)`                                                                       |
 
 `person` columns (login-or-email) become `authorIdentityId` references through `contributoridentities`.
 Timestamps are ISO-8601 strings in SQLite; they are parsed as UTC and rows with unparseable dates are reported, not
 guessed.
 
 Records that cannot be migrated losslessly:
+
 - `findings.person` resolved through an identity that no longer maps → kept as the raw email in `authorEmail`.
 - `docs_fts` (derived index) → rebuilt.
 - Legacy repos whose GitHub id cannot be resolved (deleted or no longer visible to the App) → skipped and listed.
@@ -92,11 +93,11 @@ worker. Data written to gg-pulse in the meantime remains in MongoDB for a later 
 
 ## 7. Status
 
-| Capability | Replaced? |
-|---|---|
-| Login | ✅ per-user accounts (credentials, optional Google/GitHub) — replaces shared passwords and `DEV_USER` |
-| Workspaces, members, roles | ✅ new (legacy had none) |
-| Projects, milestones, tasks, comments, activity | ✅ new, GG-ops-compatible |
-| Sync, PRs, checks, breakages | 🗓 Phase 3 |
-| Reviews, docs, Sonar, Ask, MCP | 🗓 Phases 3 and 5 |
-| People metrics | 🗓 Phase 5, redesigned (`CONTRIBUTION-MODEL.md`) |
+| Capability                                      | Replaced?                                                                                             |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Login                                           | ✅ per-user accounts (credentials, optional Google/GitHub) — replaces shared passwords and `DEV_USER` |
+| Workspaces, members, roles                      | ✅ new (legacy had none)                                                                              |
+| Projects, milestones, tasks, comments, activity | ✅ new, GG-ops-compatible                                                                             |
+| Sync, PRs, checks, breakages                    | 🗓 Phase 3                                                                                             |
+| Reviews, docs, Sonar, Ask, MCP                  | 🗓 Phases 3 and 5                                                                                      |
+| People metrics                                  | 🗓 Phase 5, redesigned (`CONTRIBUTION-MODEL.md`)                                                       |

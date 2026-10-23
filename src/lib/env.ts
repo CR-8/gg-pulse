@@ -42,13 +42,16 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     ["AUTH_GITHUB_ID", "AUTH_GITHUB_SECRET"],
   ];
   for (const [a, b] of pairs) {
-    if (!!env[a] !== !!env[b]) throw new Error(`Invalid environment variables:\n  set ${a} and ${b} together`);
+    if (!!env[a] !== !!env[b])
+      throw new Error(`Invalid environment variables:\n  set ${a} and ${b} together`);
   }
   if (env.NODE_ENV === "production") {
     const missing = [!env.APP_URL && "APP_URL", !env.EMAIL_FROM && "EMAIL_FROM"].filter(Boolean);
     if (!hasEmailTransport(env)) missing.push("RESEND_API_KEY or SMTP_HOST/SMTP_USER/SMTP_PASS");
     if (missing.length) {
-      throw new Error(`Invalid environment variables:\n  production requires ${missing.join(", ")}`);
+      throw new Error(
+        `Invalid environment variables:\n  production requires ${missing.join(", ")}`,
+      );
     }
   }
   return env;
@@ -61,7 +64,8 @@ export function getEnv(): Env {
   if (cached) return cached;
   const source: Record<string, string | undefined> = {};
   // Blank placeholder lines (`FOO=`) count as unset.
-  for (const [key, value] of Object.entries(process.env)) source[key] = value === "" ? undefined : value;
+  for (const [key, value] of Object.entries(process.env))
+    source[key] = value === "" ? undefined : value;
   return (cached = parseEnv(source));
 }
 

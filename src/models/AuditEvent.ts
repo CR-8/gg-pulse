@@ -21,4 +21,5 @@ auditEventSchema.index({ createdAt: 1 }, { expireAfterSeconds: RETENTION_SECONDS
 export type AuditEventDoc = InferSchemaType<typeof auditEventSchema>;
 
 export const AuditEvent: Model<AuditEventDoc> =
-  (models.AuditEvent as Model<AuditEventDoc>) || model<AuditEventDoc>("AuditEvent", auditEventSchema);
+  (models.AuditEvent as Model<AuditEventDoc>) ||
+  model<AuditEventDoc>("AuditEvent", auditEventSchema);

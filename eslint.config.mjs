@@ -5,7 +5,15 @@ import nextTs from "eslint-config-next/typescript";
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", ".claude/**", ".venv/**", "data/**"]),
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    ".claude/**",
+    ".venv/**",
+    "data/**",
+  ]),
   {
     // Services take the actor as an argument, so UI code must reach them through the
     // "use server" actions, which derive the actor from the session.

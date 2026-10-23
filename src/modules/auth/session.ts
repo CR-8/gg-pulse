@@ -19,7 +19,10 @@ export type SessionUser = {
  * accounts and sessions older than the account's `authVersion` (bumped by password
  * changes or "sign out everywhere", in either app) are rejected.
  */
-export async function loadActiveUser(userId: string, authVersion: number): Promise<SessionUser | null> {
+export async function loadActiveUser(
+  userId: string,
+  authVersion: number,
+): Promise<SessionUser | null> {
   const id = toObjectId(userId);
   if (!id) return null;
   await connectDB();

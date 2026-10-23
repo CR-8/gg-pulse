@@ -2,7 +2,11 @@ import { z } from "zod";
 import { PROJECT_STATUS_COLORS } from "@/modules/projects/constants";
 import { PROJECT_ROLES } from "@/modules/workspaces/roles";
 
-const name = z.string().trim().min(2, "Use at least 2 characters.").max(80, "Use at most 80 characters.");
+const name = z
+  .string()
+  .trim()
+  .min(2, "Use at least 2 characters.")
+  .max(80, "Use at most 80 characters.");
 const description = z.string().trim().max(2000, "Use at most 2000 characters.");
 
 export const createProjectSchema = z.object({

@@ -54,4 +54,5 @@ taskSchema.index({ workspaceId: 1, isArchived: 1, status: 1, dueDate: 1, project
 
 export type TaskDoc = InferSchemaType<typeof taskSchema>;
 
-export const Task: Model<TaskDoc> = (models.Task as Model<TaskDoc>) || model<TaskDoc>("Task", taskSchema);
+export const Task: Model<TaskDoc> =
+  (models.Task as Model<TaskDoc>) || model<TaskDoc>("Task", taskSchema);

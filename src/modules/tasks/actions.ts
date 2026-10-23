@@ -10,18 +10,28 @@ export async function createTaskAction(
   projectId: string,
   values: unknown,
 ): Promise<ActionResult<{ id: string }>> {
-  const result = await runAction(async () => createTask(await actionScope(slug), projectId, values));
+  const result = await runAction(async () =>
+    createTask(await actionScope(slug), projectId, values),
+  );
   if (result.ok) refresh();
   return result;
 }
 
-export async function updateTaskAction(slug: string, taskId: string, values: unknown): Promise<ActionResult> {
+export async function updateTaskAction(
+  slug: string,
+  taskId: string,
+  values: unknown,
+): Promise<ActionResult> {
   const result = await runAction(async () => updateTask(await actionScope(slug), taskId, values));
   if (result.ok) refresh();
   return result;
 }
 
-export async function addCommentAction(slug: string, taskId: string, values: unknown): Promise<ActionResult> {
+export async function addCommentAction(
+  slug: string,
+  taskId: string,
+  values: unknown,
+): Promise<ActionResult> {
   const result = await runAction(async () => {
     await addComment(await actionScope(slug), taskId, values);
   });

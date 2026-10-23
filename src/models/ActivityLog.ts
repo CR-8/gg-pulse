@@ -1,7 +1,13 @@
 import { Schema, model, models, type Model, type InferSchemaType } from "mongoose";
 
 // Shared with GG-ops: the product timeline of a task or project.
-export const ACTIVITY_ENTITY_TYPES = ["TASK", "PROJECT", "COMMENT", "SECTION", "WORKSPACE"] as const;
+export const ACTIVITY_ENTITY_TYPES = [
+  "TASK",
+  "PROJECT",
+  "COMMENT",
+  "SECTION",
+  "WORKSPACE",
+] as const;
 
 const activityLogSchema = new Schema(
   {

@@ -74,7 +74,10 @@ export async function renameWorkspace(scope: WorkspaceScope, input: unknown): Pr
   });
 }
 
-export async function createInvite(scope: WorkspaceScope, input: unknown): Promise<{ url: string; emailed: boolean }> {
+export async function createInvite(
+  scope: WorkspaceScope,
+  input: unknown,
+): Promise<{ url: string; emailed: boolean }> {
   assertCan(scope, "members.manage");
   const { email, role } = inviteSchema.parse(input);
   await connectDB();
@@ -82,8 +85,13 @@ export async function createInvite(scope: WorkspaceScope, input: unknown): Promi
 
   const existingUser = await User.findOne({ email }).select("_id").lean();
   if (existingUser) {
-    const active = await WorkspaceMember.exists({ workspaceId, userId: existingUser._id, status: "ACTIVE" });
-    if (active) throw new ServiceError("CONFLICT", `${email} is already a member of this workspace.`);
+    const active = await WorkspaceMember.exists({
+      workspaceId,
+      userId: existingUser._id,
+      status: "ACTIVE",
+    });
+    if (active)
+      throw new ServiceError("CONFLICT", `${email} is already a member of this workspace.`);
   }
 
   // One live invite per email: a new invite replaces older pending ones.
@@ -150,13 +158,19 @@ export async function acceptInvite(actor: Actor, token: string): Promise<{ slug:
     throw new ServiceError("NOT_FOUND", "This invite link is invalid or has expired.");
   }
   if (invite.email !== actor.email.toLowerCase()) {
-    throw new ServiceError("FORBIDDEN", `This invite was sent to ${invite.email}. Sign in with that account to accept it.`);
+    throw new ServiceError(
+      "FORBIDDEN",
+      `This invite was sent to ${invite.email}. Sign in with that account to accept it.`,
+    );
   }
   const workspace = await Workspace.findById(invite.workspaceId).select("slug").lean();
   if (!workspace) throw notFoundError("Workspace");
 
   const userId = oid(actor.id);
-  const existing = await WorkspaceMember.findOne({ workspaceId: invite.workspaceId, userId }).lean();
+  const existing = await WorkspaceMember.findOne({
+    workspaceId: invite.workspaceId,
+    userId,
+  }).lean();
   if (!existing) {
     await WorkspaceMember.create({
       workspaceId: invite.workspaceId,
@@ -169,7 +183,14 @@ export async function acceptInvite(actor: Actor, token: string): Promise<{ slug:
   } else if (existing.status !== "ACTIVE") {
     await WorkspaceMember.updateOne(
       { _id: existing._id },
-      { $set: { status: "ACTIVE", role: invite.role, invitedBy: invite.invitedBy, joinedAt: new Date() } },
+      {
+        $set: {
+          status: "ACTIVE",
+          role: invite.role,
+          invitedBy: invite.invitedBy,
+          joinedAt: new Date(),
+        },
+      },
     );
   }
   await WorkspaceInvite.updateOne({ _id: invite._id }, { $set: { acceptedAt: new Date() } });
@@ -223,7 +244,10 @@ export async function removeMember(scope: WorkspaceScope, memberId: string): Pro
   assertCan(scope, "members.manage");
   const member = await loadOtherMember(scope, memberId);
   await WorkspaceMember.updateOne({ _id: member._id }, { $set: { status: "REMOVED" } });
-  await ProjectMembership.deleteMany({ workspaceId: oid(scope.workspace.id), userId: member.userId });
+  await ProjectMembership.deleteMany({
+    workspaceId: oid(scope.workspace.id),
+    userId: member.userId,
+  });
   await recordAudit({
     workspaceId: scope.workspace.id,
     actorId: scope.actor.id,

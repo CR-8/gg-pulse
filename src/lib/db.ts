@@ -5,7 +5,8 @@ type Cache = { conn: typeof mongoose | null; promise: Promise<typeof mongoose> |
 
 // Survives HMR in dev and is reused across warm serverless invocations.
 const globalCache = globalThis as unknown as { _mongoose?: Cache };
-const cache: Cache = globalCache._mongoose ?? (globalCache._mongoose = { conn: null, promise: null });
+const cache: Cache =
+  globalCache._mongoose ?? (globalCache._mongoose = { conn: null, promise: null });
 
 /** The only way to reach MongoDB. */
 export async function connectDB(): Promise<typeof mongoose> {

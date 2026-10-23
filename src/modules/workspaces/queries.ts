@@ -42,7 +42,10 @@ export type MemberDTO = PersonDTO & {
 /** Active members, memoized per request: also the source for assignee pickers and name lookups. */
 export const listMembers = cache(async (workspaceId: string): Promise<MemberDTO[]> => {
   await connectDB();
-  const members = await WorkspaceMember.find({ workspaceId: oid(workspaceId), status: "ACTIVE" }).lean();
+  const members = await WorkspaceMember.find({
+    workspaceId: oid(workspaceId),
+    status: "ACTIVE",
+  }).lean();
   const users = await User.find({ _id: { $in: members.map((m) => m.userId) } })
     .select("name email image jobTitle")
     .lean();
@@ -64,7 +67,13 @@ export const listMembers = cache(async (workspaceId: string): Promise<MemberDTO[
     .sort((a, b) => a.name.localeCompare(b.name));
 });
 
-export type InviteDTO = { id: string; email: string; role: InviteRole; expiresAt: string; url: string };
+export type InviteDTO = {
+  id: string;
+  email: string;
+  role: InviteRole;
+  expiresAt: string;
+  url: string;
+};
 
 export async function listPendingInvites(scope: WorkspaceScope): Promise<InviteDTO[]> {
   assertCan(scope, "members.manage");
@@ -102,7 +111,11 @@ export async function getInvitePreview(token: string): Promise<InvitePreview | n
     workspaceName: workspace.name,
     email: invite.email,
     role: invite.role as InviteRole,
-    status: invite.acceptedAt ? "accepted" : invite.expiresAt.getTime() <= Date.now() ? "expired" : "valid",
+    status: invite.acceptedAt
+      ? "accepted"
+      : invite.expiresAt.getTime() <= Date.now()
+        ? "expired"
+        : "valid",
   };
 }
 
@@ -116,14 +129,19 @@ export type AuditEventDTO = {
   createdAt: string;
 };
 
-export async function listAuditEvents(scope: WorkspaceScope, limit = 100): Promise<AuditEventDTO[]> {
+export async function listAuditEvents(
+  scope: WorkspaceScope,
+  limit = 100,
+): Promise<AuditEventDTO[]> {
   assertCan(scope, "audit.read");
   await connectDB();
   const events = await AuditEvent.find({ workspaceId: oid(scope.workspace.id) })
     .sort({ createdAt: -1 })
     .limit(limit)
     .lean();
-  const actors = await User.find({ _id: { $in: events.map((e) => e.actorId) } }).select("name").lean();
+  const actors = await User.find({ _id: { $in: events.map((e) => e.actorId) } })
+    .select("name")
+    .lean();
   const nameOf = new Map(actors.map((u) => [String(u._id), u.name]));
   return events.map((e) => ({
     id: String(e._id),

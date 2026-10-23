@@ -22,7 +22,9 @@ export type ProjectSummaryDTO = {
 export async function listProjects(scope: WorkspaceScope): Promise<ProjectSummaryDTO[]> {
   await connectDB();
   const workspaceId = oid(scope.workspace.id);
-  const projects = await Project.find({ workspaceId, archivedAt: null }).sort({ updatedAt: -1 }).lean();
+  const projects = await Project.find({ workspaceId, archivedAt: null })
+    .sort({ updatedAt: -1 })
+    .lean();
   const now = new Date();
   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const rows = await Task.aggregate<{ _id: unknown } & TaskCounts>([
@@ -36,7 +38,13 @@ export async function listProjects(scope: WorkspaceScope): Promise<ProjectSummar
         overdue: {
           $sum: {
             $cond: [
-              { $and: [{ $ne: ["$status", "DONE"] }, { $ne: ["$dueDate", null] }, { $lt: ["$dueDate", today] }] },
+              {
+                $and: [
+                  { $ne: ["$status", "DONE"] },
+                  { $ne: ["$dueDate", null] },
+                  { $lt: ["$dueDate", today] },
+                ],
+              },
               1,
               0,
             ],
@@ -53,7 +61,12 @@ export async function listProjects(scope: WorkspaceScope): Promise<ProjectSummar
       name: p.name,
       description: p.description ?? null,
       statusColor: (p.statusColor as ProjectStatusColor | null) ?? null,
-      counts: { total: c?.total ?? 0, done: c?.done ?? 0, blocked: c?.blocked ?? 0, overdue: c?.overdue ?? 0 },
+      counts: {
+        total: c?.total ?? 0,
+        done: c?.done ?? 0,
+        blocked: c?.blocked ?? 0,
+        overdue: c?.overdue ?? 0,
+      },
       updatedAt: p.updatedAt.toISOString(),
     };
   });
@@ -71,11 +84,17 @@ export type ProjectDetailDTO = {
 };
 
 /** Resolves the project through the ownership chain; throws NOT_FOUND across workspaces. */
-export async function getProjectDetail(scope: WorkspaceScope, projectId: string): Promise<ProjectDetailDTO> {
+export async function getProjectDetail(
+  scope: WorkspaceScope,
+  projectId: string,
+): Promise<ProjectDetailDTO> {
   const { project, projectRole } = await loadProject(scope, projectId);
   const [doc, team] = await Promise.all([
     Project.findOne({ _id: oid(project.id), workspaceId: oid(scope.workspace.id) }).lean(),
-    ProjectMembership.find({ workspaceId: oid(scope.workspace.id), projectId: oid(project.id) }).lean(),
+    ProjectMembership.find({
+      workspaceId: oid(scope.workspace.id),
+      projectId: oid(project.id),
+    }).lean(),
   ]);
   return {
     id: project.id,

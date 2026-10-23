@@ -37,7 +37,10 @@ export async function updateMilestone(scope: WorkspaceScope, milestoneId: string
   const id = toObjectId(milestoneId);
   if (!id) throw notFoundError("Milestone");
   await connectDB();
-  const milestone = await Milestone.findOne({ _id: id, workspaceId: oid(scope.workspace.id) }).lean();
+  const milestone = await Milestone.findOne({
+    _id: id,
+    workspaceId: oid(scope.workspace.id),
+  }).lean();
   if (!milestone) throw notFoundError("Milestone");
   const { project, projectRole } = await loadProject(scope, String(milestone.projectId));
   assertCan(scope, "milestone.manage", projectRole);
@@ -49,8 +52,10 @@ export async function updateMilestone(scope: WorkspaceScope, milestoneId: string
     throw new ServiceError("INVALID", "The start date must be on or before the due date.");
   }
   const set = Object.fromEntries(
-    Object.entries({ ...patch, description: patch.description === undefined ? undefined : patch.description || null })
-      .filter(([, v]) => v !== undefined),
+    Object.entries({
+      ...patch,
+      description: patch.description === undefined ? undefined : patch.description || null,
+    }).filter(([, v]) => v !== undefined),
   );
   if (!Object.keys(set).length) return;
   await Milestone.updateOne({ _id: id }, { $set: set });
@@ -62,7 +67,9 @@ export async function updateMilestone(scope: WorkspaceScope, milestoneId: string
     metadata: {
       milestoneId,
       fields: Object.keys(set),
-      ...(patch.status && patch.status !== milestone.status ? { status: { from: milestone.status, to: patch.status } } : {}),
+      ...(patch.status && patch.status !== milestone.status
+        ? { status: { from: milestone.status, to: patch.status } }
+        : {}),
     },
   });
 }

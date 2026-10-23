@@ -16,26 +16,26 @@ the cost is a schema contract, enforced below.
 
 ## Deployment modes
 
-| Mode | `MONGODB_URI` | Result |
-|---|---|---|
+| Mode                               | `MONGODB_URI`                                               | Result                                                                                                                                                     |
+| ---------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Standalone (default for local dev) | its own database, e.g. `mongodb://127.0.0.1:27017/gg-pulse` | Independent app; data stays schema-compatible, so it can be merged into GG-ops's database later with `mongodump`/`mongorestore` of the shared collections. |
-| Integrated | GG-ops's database | Same accounts, passwords, workspaces, members, projects, tasks, comments and activity in both apps. |
+| Integrated                         | GG-ops's database                                           | Same accounts, passwords, workspaces, members, projects, tasks, comments and activity in both apps.                                                        |
 
 ## Shared collections (GG-ops owns the schema)
 
 gg-pulse declares these with GG-ops's exact field names, types, defaults, enums and indexes (copied from GG-ops
 `main` @ `7146c78`):
 
-| Collection | gg-pulse model | gg-pulse writes |
-|---|---|---|
-| `users` | `src/models/User.ts` | sign-up, profile (name, jobTitle), email verification timestamp |
-| `workspaces` | `src/models/Workspace.ts` | create, rename |
+| Collection         | gg-pulse model                  | gg-pulse writes                                                                 |
+| ------------------ | ------------------------------- | ------------------------------------------------------------------------------- |
+| `users`            | `src/models/User.ts`            | sign-up, profile (name, jobTitle), email verification timestamp                 |
+| `workspaces`       | `src/models/Workspace.ts`       | create, rename                                                                  |
 | `workspacemembers` | `src/models/WorkspaceMember.ts` | owner membership, invite acceptance, role change, removal (`status: "REMOVED"`) |
-| `workspaceinvites` | `src/models/WorkspaceInvite.ts` | create, accept |
-| `projects` | `src/models/Project.ts` | create, edit, archive (`archivedAt`) |
-| `tasks` | `src/models/Task.ts` | create, edit |
-| `comments` | `src/models/Comment.ts` | create |
-| `activitylogs` | `src/models/ActivityLog.ts` | append |
+| `workspaceinvites` | `src/models/WorkspaceInvite.ts` | create, accept                                                                  |
+| `projects`         | `src/models/Project.ts`         | create, edit, archive (`archivedAt`)                                            |
+| `tasks`            | `src/models/Task.ts`            | create, edit                                                                    |
+| `comments`         | `src/models/Comment.ts`         | create                                                                          |
+| `activitylogs`     | `src/models/ActivityLog.ts`     | append                                                                          |
 
 Rules gg-pulse follows on shared collections:
 
@@ -81,14 +81,14 @@ Names chosen not to collide with any of GG-ops's 31 collections (notably GG-ops 
 
 ## Roles
 
-| Prompt role | Stored as | Where |
-|---|---|---|
-| Owner | `MAINTAINER` | `workspacemembers.role` (GG-ops value) |
-| Admin | `ADMIN` | `workspacemembers.role` |
-| Member | `MEMBER` | `workspacemembers.role` |
-| Viewer | `GUEST` | `workspacemembers.role` |
-| Project Manager | `PROJECT_MANAGER` | `projectmemberships.role` (gg-pulse) |
-| Reviewer | `REVIEWER` | `projectmemberships.role` (gg-pulse) |
+| Prompt role     | Stored as         | Where                                  |
+| --------------- | ----------------- | -------------------------------------- |
+| Owner           | `MAINTAINER`      | `workspacemembers.role` (GG-ops value) |
+| Admin           | `ADMIN`           | `workspacemembers.role`                |
+| Member          | `MEMBER`          | `workspacemembers.role`                |
+| Viewer          | `GUEST`           | `workspacemembers.role`                |
+| Project Manager | `PROJECT_MANAGER` | `projectmemberships.role` (gg-pulse)   |
+| Reviewer        | `REVIEWER`        | `projectmemberships.role` (gg-pulse)   |
 
 GG-ops ignores `projectmemberships`, so a project manager in gg-pulse has ordinary workspace-role rights in GG-ops.
 

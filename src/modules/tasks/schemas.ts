@@ -43,7 +43,11 @@ export const updateTaskSchema = z.object({
 });
 
 export const commentSchema = z.object({
-  body: z.string().trim().min(1, "Write something first.").max(5000, "Use at most 5000 characters."),
+  body: z
+    .string()
+    .trim()
+    .min(1, "Write something first.")
+    .max(5000, "Use at most 5000 characters."),
 });
 
 export type CreateTaskInput = z.input<typeof createTaskSchema>;
